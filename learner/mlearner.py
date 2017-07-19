@@ -6,7 +6,7 @@ import numpy as np
 from polyparser.func_util import function_utilities
 
 
-class mlearner():
+class MLearner():
 
     def __init__(self,budget,degree,vars,domain,model_filename):
         self.budget = budget
@@ -15,7 +15,7 @@ class mlearner():
         self.domain = domain
         self.funcfile = model_filename
 
-    def learner(self):
+    def discover(self):
         model = Pipeline([("poly", PolynomialFeatures(degree=self.degree)),
                           ("linear", LinearRegression(fit_intercept=False))])
 
@@ -23,11 +23,16 @@ class mlearner():
         # Latin Hypercube Design, we may change this later
         design = lhs(L, samples=self.budget, criterion="center")
         # scale into feature range
+        LD = len(design)
+        X = np.zeros((LD, L))
         for i in range(L):
-            X[:,i] = design[:,i]*(domain[1,i]-domain[0,i]) + domain[0,i]
+            X[:,i] = design[:,i]*(self.domain[1][i]-self.domain[0][i]) + self.domain[0][i]
 
         eval = function_utilities.Evaluator(self.funcfile)
-        y = eval.eval_function(X)
+
+        y = np.zeros((LD,1))
+        for i in range(LD):
+            y[i] = eval.eval_function(X[i,:])
 
         # fit the polynomial model regression
         model = model.fit(X, y)
