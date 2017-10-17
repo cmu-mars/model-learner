@@ -1,2 +1,4 @@
 nose
 sphinx
+sklearn
+git+https://github.com/cmu-mars/marspolyparser
