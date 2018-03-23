@@ -6,9 +6,9 @@ import numpy as np
 from polyparser.func_util import function_utilities
 
 
-class MLearner():
+class MLearner:
 
-    def __init__(self,budget,degree,vars,domain,model_filename):
+    def __init__(self, budget, degree, vars, domain, model_filename):
         self.budget = budget
         self.degree = degree
         self.vars = vars
@@ -26,20 +26,16 @@ class MLearner():
         LD = len(design)
         X = np.zeros((LD, L))
         for i in range(L):
-            X[:,i] = design[:,i]*(self.domain[1][i]-self.domain[0][i]) + self.domain[0][i]
+            X[:, i] = design[:, i] * (self.domain[1][i] - self.domain[0][i]) + self.domain[0][i]
 
         eval = function_utilities.Evaluator(self.funcfile)
 
         y = np.zeros((LD,1))
         for i in range(LD):
-            y[i] = eval.eval_function(X[i,:])
+            y[i] = eval.eval_function(X[i, :])
 
         # fit the polynomial model regression
         model = model.fit(X, y)
 
         return model
-
-
-
-
 
