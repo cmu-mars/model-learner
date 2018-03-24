@@ -209,3 +209,27 @@ class Term:
             return False
         else:
             return True
+
+
+def genModelTermsfromString(txtModel):
+    txtModel = txtModel.replace(" ", "")
+    terms = regex.split("[+]", txtModel)
+    generatedModel = []
+    for i in range(len(terms)):
+        term = regex.split("[*]", terms[i])
+        if len(term) == 1 and is_number(term[0]):  # this is the constant term
+            coeff = float(term[0])
+            generatedModel.append(Term(coeff))
+        else:
+            coeff = 1
+            idx = -1
+            for index in range(len(term)):
+                if is_number(term[index]):
+                    coeff = float(term[index])
+                    idx = index
+
+            if idx != -1:  # we have a explicit coefficient, i.e., 2*o1 instead of o1
+                term.pop(idx)
+            generatedModel.append(Term(coeff, term))
+
+    return generatedModel

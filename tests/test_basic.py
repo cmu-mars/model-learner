@@ -3,6 +3,7 @@ from polyparser.func_util import function_utilities
 import unittest
 from learner import mlearner
 
+
 class BasicTestSuite(unittest.TestCase):
     """Basic test cases."""
 
@@ -37,9 +38,10 @@ class BasicTestSuite(unittest.TestCase):
         self.assertTrue((coefficients[0,1] >= 0.9) & (coefficients[0,2] >= 0.9))
 
 
+def main():
+    suite = unittest.TestLoader().loadTestsFromTestCase(BasicTestSuite)
+    unittest.TextTestRunner(verbosity=2).run(suite)
 
-# if __name__ == '__main__':
-#     unittest.main()
 
-suite = unittest.TestLoader().loadTestsFromTestCase(BasicTestSuite)
-unittest.TextTestRunner(verbosity=2).run(suite)
+if __name__ == '__main__':
+    unittest.main()
