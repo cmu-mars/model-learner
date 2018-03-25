@@ -45,3 +45,17 @@ class MLearner:
         p_frontY = [pair[1] for pair in p_front]
         return p_frontX, p_frontY
 
+    def get_json(self, pareto_power, pareto_speed):
+
+        data = {}
+        data['configurations'] = []
+        for i in range(len(pareto_power)):
+            data['configurations'].append({
+                'config_id': i + 1,
+                'power_load': pareto_power[i]/3600*1000,
+                'power_load_wh': pareto_power[i],
+                'speed': pareto_speed[i]
+            })
+
+        return data
+
