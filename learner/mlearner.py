@@ -3,39 +3,45 @@ from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from pyDOE import *
 import numpy as np
-from polyparser.func_util import function_utilities
+import model
 
 
 class MLearner:
 
-    def __init__(self, budget, degree, vars, domain, model_filename):
+    def __init__(self, budget, ndim, power_model):
         self.budget = budget
-        self.degree = degree
-        self.vars = vars
-        self.domain = domain
-        self.funcfile = model_filename
+        self.degree = ndim
+        self.model = power_model
 
     def discover(self):
-        model = Pipeline([("poly", PolynomialFeatures(degree=self.degree)),
-                          ("linear", LinearRegression(fit_intercept=False))])
+        # performance models has interaction degree of two, based on our study
+        model = Pipeline([("poly", PolynomialFeatures(degree=2, interaction_only=True, include_bias=False)),
+                               ("linear", LinearRegression(fit_intercept=True))])
 
-        L = len(self.vars)
-        # Latin Hypercube Design, we may change this later
-        design = lhs(L, samples=self.budget, criterion="center")
-        # scale into feature range
-        LD = len(design)
-        X = np.zeros((LD, L))
-        for i in range(L):
-            X[:, i] = design[:, i] * (self.domain[1][i] - self.domain[0][i]) + self.domain[0][i]
-
-        eval = function_utilities.Evaluator(self.funcfile)
-
-        y = np.zeros((LD,1))
-        for i in range(LD):
-            y[i] = eval.eval_function(X[i, :])
+        # take some ran dom samples
+        # this should be replaced with pair wise sampling
+        X = np.random.randint(2, size=(self.budget, self.degree))
+        y = self.model.evaluateModelFast(X)
 
         # fit the polynomial model regression
-        model = model.fit(X, y)
+        pmodel = model.fit(X, y)
 
-        return model
+        return pmodel
+
+    def get_pareto_frontier(self, Xs, Ys, maxX=True, maxY=True):
+        # Sort the list in either ascending or descending order of X
+        myList = sorted([[Xs[i], Ys[i]] for i in range(len(Xs))], reverse=maxX)
+        # Start the Pareto frontier with the first value in the sorted list
+        p_front = [myList[0]]
+        # Loop through the sorted list
+        for pair in myList[1:]:
+            if maxY:
+                if pair[1] >= p_front[-1][1]:
+                    p_front.append(pair)
+            else:
+                if pair[1] <= p_front[-1][1]:
+                    p_front.append(pair)
+        p_frontX = [pair[0] for pair in p_front]
+        p_frontY = [pair[1] for pair in p_front]
+        return p_frontX, p_frontY
 
