@@ -15,7 +15,7 @@ class MLearner:
 
     def discover(self):
         # performance models has interaction degree of two, based on our study
-        model = Pipeline([("poly", PolynomialFeatures(degree=2, interaction_only=True, include_bias=False)),
+        model = Pipeline([("poly", PolynomialFeatures(degree=2, interaction_only=True, include_bias=True)),
                                ("linear", LinearRegression(fit_intercept=True))])
 
         # take some ran dom samples
@@ -53,7 +53,7 @@ class MLearner:
             data['configurations'].append({
                 'config_id': i + 1,
                 'power_load': pareto_power[i]/3600*1000,
-                'power_load_wh': pareto_power[i],
+                'power_load_w': pareto_power[i],
                 'speed': pareto_speed[i]
             })
 

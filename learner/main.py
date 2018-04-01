@@ -6,11 +6,12 @@ import itertools
 import json
 
 from learner.mlearner import MLearner
-from learner.model import genModelTermsfromString, Model
+from learner.model import genModelTermsfromString, Model, genModelfromCoeff
 
 path = '../conf/'
-model = 'model.txt'
-config_list_file = 'config_list1.json'
+model_name = 'model.txt'
+learned_model_name = 'learned_model.txt'
+config_list_file = 'config_list2.json'
 ndim = 20
 nrow = 1
 budget = 2000
@@ -23,7 +24,7 @@ default_conf = np.reshape(np.ones(ndim), (1, ndim))
 # coefficients = learned_model.named_steps['linear'].coef_
 # print(coefficients)
 
-with open(os.path.join(path, model), 'r') as model_file:
+with open(os.path.join(path, model_name), 'r') as model_file:
     model_txt = model_file.read()
 
 power_model_terms = genModelTermsfromString(model_txt)
@@ -39,6 +40,13 @@ learner = MLearner(budget, ndim, power_model)
 learned_model = learner.discover()
 
 print(learned_model.named_steps['linear'].coef_)
+
+learned_power_model_terms = genModelfromCoeff(learned_model.named_steps['linear'].coef_, ndim)
+learned_power_model = Model(learned_power_model_terms, ndim)
+
+print(learned_power_model.__str__())
+with open(os.path.join(path, learned_model_name), 'w') as model_file:
+    model_file.write(learned_power_model.__str__())
 
 # configs = itertools.product(range(2), repeat=ndim)
 # xTest = np.zeros(shape=(2**ndim, ndim))
@@ -65,7 +73,7 @@ json_data = learner.get_json(conf_pareto_front[0], conf_pareto_front[1])
 json_data['configurations'].append({
     'config_id': 0,
     'power_load': yDefaultPower[0]/3600*1000,
-    'power_load_wh': yDefaultPower[0],
+    'power_load_w': yDefaultPower[0],
     'speed': yDefaultSpeed[0]
 })
 

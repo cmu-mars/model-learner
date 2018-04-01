@@ -233,3 +233,18 @@ def genModelTermsfromString(txtModel):
             generatedModel.append(Term(coeff, term))
 
     return generatedModel
+
+
+def genModelfromCoeff(coeff, ndim):
+    options = ["o" + str(i) for i in range(ndim)]
+    generatedModel = []
+
+    generatedModel.append(Term(coeff[0]))
+    for i in range(ndim):
+        generatedModel.append(Term(coeff[i+1], [options[i]]))
+
+    for i in range(ndim):
+        for j in range(i+1, ndim):
+            generatedModel.append(Term(coeff[ndim + 1 + i + j], [options[i], options[j]]))
+
+    return generatedModel
