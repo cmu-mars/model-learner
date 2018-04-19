@@ -1,16 +1,19 @@
 import numpy as np
-import mlearner
-import model
 import os
 import itertools
 import json
 
 # the main for learning
 
-from learner.mlearner import MLearner
-from learner.model import genModelTermsfromString, Model, genModelfromCoeff
+from mlearner import MLearner
+from model import genModelTermsfromString, Model, genModelfromCoeff
 from ready_db import ReadyDB
 from lib import *
+import swagger_client
+from swagger_client import ApiClient
+from swagger_client import Configuration
+from swagger_client.rest import ApiException
+
 
 model_path = os.path.expanduser("~/cp1/models/")
 learned_model_path = os.path.expanduser("~/cp1/")
@@ -28,16 +31,24 @@ ready = ReadyDB(ready_db=ready_json)
 budget = ready.get_budget()
 model_name = ready.get_power_model()
 
+internal_api = swagger_client.DefaultApi()
 
 default_conf = np.reshape(np.ones(ndim), (1, ndim))
 
-with open(os.path.join(model_path, model_name), 'r') as model_file:
-    model_txt = model_file.read()
+try:
+    with open(os.path.join(model_path, model_name), 'r') as model_file:
+        model_txt = model_file.read()
 
-power_model_terms = genModelTermsfromString(model_txt)
-true_power_model = Model(power_model_terms, ndim)
-
-print("The true model: {0}".format(true_power_model.__str__()))
+    power_model_terms = genModelTermsfromString(model_txt)
+    true_power_model = Model(power_model_terms, ndim)
+    print("The true model: {0}".format(true_power_model.__str__()))
+except Exception as e:
+    internal = {
+    "status": "parsing-error",
+    "message": e.message,
+    "sim-time": 0
+    }
+    internal_api.internal_post(internal)
 
 
 # xTrain = np.ones(ndim)
@@ -46,11 +57,35 @@ print("The true model: {0}".format(true_power_model.__str__()))
 # print(yTrain)
 
 print("Learning started")
+internal = {
+    "status": "learning-started",
+    "message": "lets start learning the power model",
+    "sim-time": 0
+    }
+internal_api.internal_post(internal)
+
+
 # learn the model
-learner = MLearner(budget, ndim, true_power_model)
-learned_model = learner.discover()
+try:
+    learner = MLearner(budget, ndim, true_power_model)
+    learned_model = learner.discover()
+except Exception as e:
+    internal = {
+    "status": "learning-error",
+    "message": e.message,
+    "sim-time": 0
+    }
+    internal_api.internal_post(internal)
+
 
 print("Learning done!")
+internal = {
+    "status": "learning-done",
+    "message": "done with the learning",
+    "sim-time": 0
+    }
+internal_api.internal_post(internal)
+
 print(learned_model.named_steps['linear'].coef_)
 
 learned_power_model_terms = genModelfromCoeff(learned_model.named_steps['linear'].coef_, ndim)
