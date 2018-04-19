@@ -45,8 +45,7 @@ try:
 except Exception as e:
     internal = {
     "status": "parsing-error",
-    "message": e.message,
-    "sim-time": 0
+    "message": e.message
     }
     internal_api.internal_post(internal)
 
@@ -59,9 +58,8 @@ except Exception as e:
 print("Learning started")
 internal = {
     "status": "learning-started",
-    "message": "lets start learning the power model",
-    "sim-time": 0
-    }
+    "message": "lets start learning the power model"
+}
 internal_api.internal_post(internal)
 
 
@@ -72,8 +70,7 @@ try:
 except Exception as e:
     internal = {
     "status": "learning-error",
-    "message": e.message,
-    "sim-time": 0
+    "message": e.message
     }
     internal_api.internal_post(internal)
 
@@ -81,8 +78,7 @@ except Exception as e:
 print("Learning done!")
 internal = {
     "status": "learning-done",
-    "message": "done with the learning",
-    "sim-time": 0
+    "message": "done with the learning"
     }
 internal_api.internal_post(internal)
 
