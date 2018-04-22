@@ -3,6 +3,7 @@ import numpy as np
 from sympy.core import sympify
 from lib import *
 import re as regex
+import random
 
 
 class Model:
@@ -248,3 +249,21 @@ def genModelfromCoeff(coeff, ndim):
             generatedModel.append(Term(coeff[ndim + 1 + i + j], [options[i], options[j]]))
 
     return generatedModel
+
+
+def genModel(individualOptions, interactions, max_coeff):
+    given_model = []
+    size = individualOptions + interactions
+    for i in range(size):
+        if i < individualOptions:
+            term = Term(random.randint(0, max_coeff), ["o" + str(i)])
+            given_model.append(term)
+        else:
+            option1 = random.randint(0, individualOptions - 1)
+            option2 = random.randint(0, individualOptions - 1)
+            while option1 == option2:
+                option2 = random.randint(0, individualOptions - 1)
+            term = Term(random.randint(0, max_coeff), ["o" + str(option1), "o" + str(option2)])
+            given_model.append(term)
+
+    return given_model
