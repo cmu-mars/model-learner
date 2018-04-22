@@ -11,7 +11,7 @@ ndim = 20
 max_coeff = 10
 
 opt = 20
-interactions = list(range(1, N))
+interactions = list(range(1, N+1))
 
 xTest = np.ones(shape=(1, ndim))
 

@@ -10,12 +10,10 @@ from model import genModelTermsfromString, Model, genModelfromCoeff
 from ready_db import ReadyDB
 from lib import *
 import swagger_client
-from swagger_client import ApiClient
-from swagger_client import Configuration
-from swagger_client.rest import ApiException
+from swagger_client.models.cp1_internal_status import CP1InternalStatus
 
 
-model_path = os.path.expanduser("~/cp1/models/")
+model_path = os.path.expanduser("~/catkin_ws/src/cp1_base/power_models/")
 learned_model_path = os.path.expanduser("~/cp1/")
 config_list_file = os.path.expanduser('~/cp1/config_list.json')
 config_list_file_true = os.path.expanduser('~/cp1/config_list_true.json')
@@ -43,11 +41,7 @@ try:
     true_power_model = Model(power_model_terms, ndim)
     print("The true model: {0}".format(true_power_model.__str__()))
 except Exception as e:
-    internal = {
-    "status": "parsing-error",
-    "message": e.message
-    }
-    internal_api.internal_post(internal)
+    internal_api.internal_post(CP1InternalStatus("parsing-error", e.message))
 
 
 # xTrain = np.ones(ndim)
@@ -56,11 +50,7 @@ except Exception as e:
 # print(yTrain)
 
 print("Learning started")
-internal = {
-    "status": "learning-started",
-    "message": "lets start learning the power model"
-}
-internal_api.internal_post(internal)
+internal_api.internal_post(CP1InternalStatus("learning-started", "lets start learning the power model"))
 
 
 # learn the model
@@ -68,19 +58,11 @@ try:
     learner = MLearner(budget, ndim, true_power_model)
     learned_model = learner.discover()
 except Exception as e:
-    internal = {
-    "status": "learning-error",
-    "message": e.message
-    }
-    internal_api.internal_post(internal)
+    internal_api.internal_post(CP1InternalStatus("learning-error", e.message))
 
 
 print("Learning done!")
-internal = {
-    "status": "learning-done",
-    "message": "done with the learning"
-    }
-internal_api.internal_post(internal)
+internal_api.internal_post(CP1InternalStatus("learning-done", "done with the learning"))
 
 print(learned_model.named_steps['linear'].coef_)
 
