@@ -9,9 +9,6 @@ from mlearner import MLearner
 from model import genModelTermsfromString, Model, genModelfromCoeff
 from ready_db import ReadyDB
 from lib import *
-import swagger_client
-from swagger_client.models.cp1_internal_status import CP1InternalStatus
-
 
 model_path = os.path.expanduser("~/catkin_ws/src/cp1_base/power_models/")
 learned_model_path = os.path.expanduser("~/cp1/")
@@ -25,96 +22,93 @@ test_size = 10000
 mu, sigma = 0, 0.1
 
 
-ready = ReadyDB(ready_db=ready_json)
-budget = ready.get_budget()
-model_name = ready.get_power_model()
+class Learn:
+    def __init__(self):
+        self.ready = ReadyDB(ready_db=ready_json)
+        self.budget = self.ready.get_budget()
+        self.model_name = self.ready.get_power_model()
+        self.default_conf = np.reshape(np.ones(ndim), (1, ndim))
+        self.true_power_model = None
+        self.learned_power_model = None
+        self.learned_model = None
+        self.learner = None
 
-internal_api = swagger_client.DefaultApi()
+    def get_true_model(self):
+        try:
+            with open(os.path.join(model_path, self.model_name), 'r') as model_file:
+                model_txt = model_file.read()
 
-default_conf = np.reshape(np.ones(ndim), (1, ndim))
+            power_model_terms = genModelTermsfromString(model_txt)
+            self.true_power_model = Model(power_model_terms, ndim)
+            print("The true model: {0}".format(self.true_power_model.__str__()))
+            return self.true_power_model
+        except Exception as e:
+            raise Exception(e)
 
-try:
-    with open(os.path.join(model_path, model_name), 'r') as model_file:
-        model_txt = model_file.read()
+    def start_learning(self):
 
-    power_model_terms = genModelTermsfromString(model_txt)
-    true_power_model = Model(power_model_terms, ndim)
-    print("The true model: {0}".format(true_power_model.__str__()))
-except Exception as e:
-    internal_api.internal_post(CP1InternalStatus("parsing-error", e.message))
+        # learn the model
+        try:
+            self.learner = MLearner(self.budget, ndim, self.true_power_model)
+            self.learned_model = self.learner.discover()
+        except Exception as e:
+            raise Exception(e)
 
+    def dump_learned_model(self):
+        """dumps model in ~/cp1/"""
 
-# xTrain = np.ones(ndim)
-# xTrain = np.reshape(xTrain, (nrow, ndim))
-# yTrain = power_model.evaluateModelFast(xTrain)
-# print(yTrain)
+        try:
+            learned_power_model_terms = genModelfromCoeff(self.learned_model.named_steps['linear'].coef_, ndim)
+            self.learned_power_model = Model(learned_power_model_terms, ndim)
+        except Exception as e:
+            raise Exception(e)
 
-print("Learning started")
-internal_api.internal_post(CP1InternalStatus("learning-started", "lets start learning the power model"))
+        print("The learned model: {0}".format(self.learned_power_model.__str__()))
 
+        with open(os.path.join(learned_model_path, learned_model_name), 'w') as model_file:
+            model_file.write(self.learned_power_model.__str__())
 
-# learn the model
-try:
-    learner = MLearner(budget, ndim, true_power_model)
-    learned_model = learner.discover()
-except Exception as e:
-    internal_api.internal_post(CP1InternalStatus("learning-error", e.message))
+        # configs = itertools.product(range(2), repeat=ndim)
+        # xTest = np.zeros(shape=(2**ndim, ndim))
+        # i = 0
+        # for c in configs:
+        #     xTest[i, :] = np.array(c)
+        #     i += 1
 
+        xTest = np.random.randint(2, size=(test_size, ndim))
+        yTestPower = self.learned_model.predict(xTest)
+        yTestPower_true = self.true_power_model.evaluateModelFast(xTest)
 
-print("Learning done!")
-internal_api.internal_post(CP1InternalStatus("learning-done", "done with the learning"))
+        # adding noise for the speed
+        s = np.random.normal(mu, sigma, test_size)
+        yTestSpeed = yTestPower_true/100 + s
 
-print(learned_model.named_steps['linear'].coef_)
+        yDefaultPower = self.learned_model.predict(self.default_conf)
+        yDefaultPower_true = self.true_power_model.evaluateModelFast(self.default_conf)
+        yDefaultSpeed = yDefaultPower_true/100
 
-learned_power_model_terms = genModelfromCoeff(learned_model.named_steps['linear'].coef_, ndim)
-learned_power_model = Model(learned_power_model_terms, ndim)
+        idx_pareto, pareto_power, pareto_speed = self.learner.get_pareto_frontier(yTestPower, yTestSpeed, maxX=False, maxY=True)
+        json_data = get_json(pareto_power, pareto_speed)
 
-print("The learned model: {0}".format(learned_power_model.__str__()))
+        json_data_true_model = get_json([yTestPower_true[i] for i in idx_pareto], [yTestSpeed[i] for i in idx_pareto])
 
-with open(os.path.join(learned_model_path, learned_model_name), 'w') as model_file:
-    model_file.write(learned_power_model.__str__())
+        # add the default configuration
+        json_data['configurations'].append({
+            'config_id': 0,
+            'power_load': yDefaultPower[0]/3600*1000,
+            'power_load_w': yDefaultPower[0],
+            'speed': yDefaultSpeed[0]
+        })
+        with open(config_list_file, 'w') as outfile:
+            json.dump(json_data, outfile)
 
-# configs = itertools.product(range(2), repeat=ndim)
-# xTest = np.zeros(shape=(2**ndim, ndim))
-# i = 0
-# for c in configs:
-#     xTest[i, :] = np.array(c)
-#     i += 1
-
-xTest = np.random.randint(2, size=(test_size, ndim))
-yTestPower = learned_model.predict(xTest)
-yTestPower_true = true_power_model.evaluateModelFast(xTest)
-
-# adding noise for the speed
-s = np.random.normal(mu, sigma, test_size)
-yTestSpeed = yTestPower_true/100 + s
-
-yDefaultPower = learned_model.predict(default_conf)
-yDefaultPower_true = true_power_model.evaluateModelFast(default_conf)
-yDefaultSpeed = yDefaultPower_true/100
-
-idx_pareto, pareto_power, pareto_speed = learner.get_pareto_frontier(yTestPower, yTestSpeed, maxX=False, maxY=True)
-json_data = get_json(pareto_power, pareto_speed)
-
-json_data_true_model = get_json([yTestPower_true[i] for i in idx_pareto], [yTestSpeed[i] for i in idx_pareto])
-
-# add the default configuration
-json_data['configurations'].append({
-    'config_id': 0,
-    'power_load': yDefaultPower[0]/3600*1000,
-    'power_load_w': yDefaultPower[0],
-    'speed': yDefaultSpeed[0]
-})
-with open(config_list_file, 'w') as outfile:
-    json.dump(json_data, outfile)
-
-json_data_true_model['configurations'].append({
-    'config_id': 0,
-    'power_load': yDefaultPower_true[0]/3600*1000,
-    'power_load_w': yDefaultPower_true[0],
-    'speed': yDefaultSpeed[0]
-})
-with open(config_list_file_true, 'w') as outfile:
-    json.dump(json_data_true_model, outfile)
+        json_data_true_model['configurations'].append({
+            'config_id': 0,
+            'power_load': yDefaultPower_true[0]/3600*1000,
+            'power_load_w': yDefaultPower_true[0],
+            'speed': yDefaultSpeed[0]
+        })
+        with open(config_list_file_true, 'w') as outfile:
+            json.dump(json_data_true_model, outfile)
 
 
