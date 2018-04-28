@@ -3,16 +3,16 @@
 from setuptools import setup, find_packages
 
 
-with open('README.rst') as f:
+with open('README.md') as f:
     readme = f.read()
 
 with open('LICENSE') as f:
     license = f.read()
 
 setup(
-    name='ployparser',
+    name='model_learner',
     version='0.1.0',
-    description='Expression parser for BRASS MARS project',
+    description='model learner for BRASS MARS project',
     long_description=readme,
     author='Pooyan Jamshidi',
     author_email='pooyan.jamshidi@gmail.com',
