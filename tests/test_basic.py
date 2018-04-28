@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-from context import learner
+import learner
 
 
 class BasicTestSuite(unittest.TestCase):
