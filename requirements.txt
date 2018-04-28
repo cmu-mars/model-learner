@@ -3,4 +3,3 @@ sphinx
 sklearn
 pyDOE
 sympy
-git+https://github.com/cmu-mars/marspolyparser

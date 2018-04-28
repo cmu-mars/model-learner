@@ -10,9 +10,9 @@ with open('LICENSE') as f:
     license = f.read()
 
 setup(
-    name='model_learner',
+    name='learner',
     version='0.1.0',
-    description='model learner for BRASS MARS project',
+    description='The model discovery for BRASS MARS project',
     long_description=readme,
     author='Pooyan Jamshidi',
     author_email='pooyan.jamshidi@gmail.com',
