@@ -1,9 +1,7 @@
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
-from pyDOE import *
 import numpy as np
-import learner.model
 
 
 class MLearner:
