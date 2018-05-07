@@ -5,10 +5,10 @@ import json
 
 # the main for learning
 
-from mlearner import MLearner
-from model import genModelTermsfromString, Model, genModelfromCoeff
-from ready_db import ReadyDB
-from lib import *
+from learner.mlearner import MLearner
+from learner.model import genModelTermsfromString, Model, genModelfromCoeff
+from learner.ready_db import ReadyDB
+from learner.lib import *
 
 model_path = os.path.expanduser("~/catkin_ws/src/cp1_base/power_models/")
 learned_model_path = os.path.expanduser("~/cp1/")

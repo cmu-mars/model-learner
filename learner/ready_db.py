@@ -1,5 +1,5 @@
 import json
-from constants import AdaptationLevel
+from learner.constants import AdaptationLevel
 
 
 class ReadyDB:

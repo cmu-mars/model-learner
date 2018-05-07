@@ -1,4 +1,4 @@
-from model import genModel, Model, Term
+from learner.model import genModel, Model, Term
 import os
 import numpy as np
 
