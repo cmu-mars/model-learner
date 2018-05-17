@@ -76,7 +76,14 @@ class Learn:
         #     i += 1
 
         xTest = np.random.randint(2, size=(test_size, ndim))
-        yTestPower = self.learned_model.predict(xTest)
+
+        for i in range(test_size):
+            if np.count_nonzero(xTest[i, :]) == 0:
+                xTest = np.delete(xTest, i, 0)
+                break
+
+        # to avoid negative power load
+        yTestPower = abs(self.learned_model.predict(xTest))
         yTestPower_true = self.true_power_model.evaluateModelFast(xTest)
 
         # adding noise for the speed
