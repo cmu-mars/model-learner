@@ -82,7 +82,7 @@ class Learn:
         # adding noise for the speed
         # s = np.random.normal(mu, sigma, test_size)
 
-        yTestSpeed = []
+        yTestSpeed = np.zeros(test_size)
         for i in range(test_size):
             yTestSpeed[i] = speed_list[i % len(speed_list)]
 
