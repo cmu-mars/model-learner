@@ -80,11 +80,13 @@ class Learn:
         yTestPower_true = self.true_power_model.evaluateModelFast(xTest)
 
         # adding noise for the speed
-        # s = np.random.normal(mu, sigma, test_size)
+        s = np.random.normal(mu, sigma, test_size)
 
         yTestSpeed = np.zeros(test_size)
         for i in range(test_size):
             yTestSpeed[i] = speed_list[i % len(speed_list)]
+
+        yTestSpeed = yTestSpeed + s
 
         yDefaultPower = self.learned_model.predict(self.default_conf)
         yDefaultPower_true = self.true_power_model.evaluateModelFast(self.default_conf)
