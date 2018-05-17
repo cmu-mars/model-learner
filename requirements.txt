@@ -3,3 +3,4 @@ sphinx
 sklearn
 pyDOE
 sympy
+scipy

@@ -19,6 +19,7 @@ learned_model_name = 'learned_model'
 ndim = 20
 test_size = 10000
 mu, sigma = 0, 0.1
+speed_list = [0.17, 0.34, 0.68]
 
 
 class Learn:
@@ -79,12 +80,15 @@ class Learn:
         yTestPower_true = self.true_power_model.evaluateModelFast(xTest)
 
         # adding noise for the speed
-        s = np.random.normal(mu, sigma, test_size)
-        yTestSpeed = yTestPower_true/100 + s
+        # s = np.random.normal(mu, sigma, test_size)
+
+        yTestSpeed = []
+        for i in range(test_size):
+            yTestSpeed[i] = speed_list[i % len(speed_list)]
 
         yDefaultPower = self.learned_model.predict(self.default_conf)
         yDefaultPower_true = self.true_power_model.evaluateModelFast(self.default_conf)
-        yDefaultSpeed = yDefaultPower_true/100
+        yDefaultSpeed = speed_list[2]
 
         idx_pareto, pareto_power, pareto_speed = self.learner.get_pareto_frontier(yTestPower, yTestSpeed, maxX=False, maxY=True)
         json_data = get_json(pareto_power, pareto_speed)
@@ -96,7 +100,7 @@ class Learn:
             'config_id': 0,
             'power_load': yDefaultPower[0]/3600*1000,
             'power_load_w': yDefaultPower[0],
-            'speed': yDefaultSpeed[0]
+            'speed': yDefaultSpeed
         })
         with open(config_list_file, 'w') as outfile:
             json.dump(json_data, outfile)
@@ -105,7 +109,7 @@ class Learn:
             'config_id': 0,
             'power_load': yDefaultPower_true[0]/3600*1000,
             'power_load_w': yDefaultPower_true[0],
-            'speed': yDefaultSpeed[0]
+            'speed': yDefaultSpeed
         })
         with open(config_list_file_true, 'w') as outfile:
             json.dump(json_data_true_model, outfile)
