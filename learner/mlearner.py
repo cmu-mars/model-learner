@@ -1,9 +1,7 @@
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
-from pyDOE import *
 import numpy as np
-import learner.model
 
 
 class MLearner:
@@ -53,5 +51,3 @@ class MLearner:
         p_frontX = [pair[0] for pair in p_front]
         p_frontY = [pair[1] for pair in p_front]
         return pareto_idx, p_frontX, p_frontY
-
-
