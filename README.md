@@ -35,6 +35,24 @@ learned_power_model = Model(learned_power_model_terms, ndim)
 learned_power_model.__str__()
 ```
 
+# Tutorial
+
+We used [Binder](https://mybinder.org/) that allows for hosting interactive Jupyter notebooks on internet and let students to use them interactively immediately! It uses JupyterHub under the hood.
+
+* Go to [http://mybinder.org/v2/gh/cmu-mars/model-learner/tutorial](http://mybinder.org/v2/gh/cmu-mars/model-learner/tutorial) (which will launch the [https://github.com/cmu-mars/model-learner](https://github.com/cmu-mars/model-learner) repository)
+* Wait for it to build.
+* click ‘tutorials’, click a notebook, and enjoy!
+
+Binder elegantly uses Kubernetes + Docker under the hood and facilitate seamless installations of dependencies that are declared in `requirements.txt`. 
+
+Other IPython hosting/viewer services:
+* [colaboratory](https://colab.research.google.com/)
+* [nbviewer](https://nbviewer.jupyter.org/)
+* [Azure notebooks](https://notebooks.azure.com/)
+* [Anaconda cloud](https://anaconda.org/)
+* [paiza](https://paiza.cloud/en/jupyter-notebook-online)
+
+
 # Maintainer
 
 If you need a new feature to be added, please contact [Pooyan Jamshidi](https://pooyanjamshidi.github.io).
