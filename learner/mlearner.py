@@ -12,19 +12,22 @@ class MLearner:
         self.budget = budget
         self.degree = ndim
         self.model = power_model
+        self.X = None
+        self.y = None
+
+    def sample_random(self):
+        # take some ran dom samples
+        # this should be replaced with pair wise sampling
+        self.X = np.random.randint(2, size=(self.budget, self.degree))
+        self.y = self.model.evaluateModelFast(self.X)
 
     def discover(self):
         # performance models has interaction degree of two, based on our study
         model = Pipeline([("poly", PolynomialFeatures(degree=2, interaction_only=True, include_bias=True)),
                                ("linear", LinearRegression(fit_intercept=True))])
 
-        # take some ran dom samples
-        # this should be replaced with pair wise sampling
-        X = np.random.randint(2, size=(self.budget, self.degree))
-        y = self.model.evaluateModelFast(X)
-
         # fit the polynomial model regression
-        pmodel = model.fit(X, y)
+        pmodel = model.fit(self.X, self.y)
 
         return pmodel
 

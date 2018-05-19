@@ -1,7 +1,7 @@
 # General imports
 import numpy as np
 from sympy.core import sympify
-from lib import *
+from learner.lib import *
 import re as regex
 import random
 
