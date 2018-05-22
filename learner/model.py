@@ -175,6 +175,9 @@ class Model:
             str2 += " + " + str(self.constant)
         return str2
 
+    def toString(self):
+        return self.__str__()
+
 
 class Term:
     def __init__(self, coefficient, options="1"):  # The default value is for the constant term
@@ -240,13 +243,17 @@ def genModelfromCoeff(coeff, ndim):
     options = ["o" + str(i) for i in range(ndim)]
     generatedModel = []
 
+    # Adding bias term
     generatedModel.append(Term(coeff[0]))
+
     for i in range(ndim):
         generatedModel.append(Term(coeff[i+1], [options[i]]))
 
-    for i in range(ndim):
-        for j in range(i+1, ndim):
-            generatedModel.append(Term(coeff[ndim + 1 + i + j], [options[i], options[j]]))
+    # Generating interaction terms, if any
+    if len(coeff) > ndim + 1:
+        for i in range(ndim):
+            for j in range(i+1, ndim):
+                generatedModel.append(Term(coeff[ndim + 1 + i + j], [options[i], options[j]]))
 
     return generatedModel
 

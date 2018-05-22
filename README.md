@@ -43,7 +43,7 @@ We used [Binder](https://mybinder.org/) that allows for hosting interactive Jupy
 * Wait for it to build.
 * click ‘tutorials’, click a notebook, and enjoy!
 
-Binder elegantly uses Kubernetes + Docker under the hood and facilitate seamless installations of dependencies that are declared in `requirements.txt`. 
+Binder elegantly uses `Kubernetes + Docker` under the hood and facilitate seamless installations of dependencies that are declared in `requirements.txt`. 
 
 Other IPython hosting/viewer services:
 * [colaboratory](https://colab.research.google.com/)

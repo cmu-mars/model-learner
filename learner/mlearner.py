@@ -19,10 +19,20 @@ class MLearner:
         self.X = np.random.randint(2, size=(self.budget, self.degree))
         self.y = self.model.evaluateModelFast(self.X)
 
-    def discover(self):
+    def learn_with_interactions(self):
         # performance models has interaction degree of two, based on our study
         model = Pipeline([("poly", PolynomialFeatures(degree=2, interaction_only=True, include_bias=True)),
                                ("linear", LinearRegression(fit_intercept=True))])
+
+        # fit the polynomial model regression
+        pmodel = model.fit(self.X, self.y)
+
+        return pmodel
+
+    def learn_without_interactions(self):
+        # performance models has interaction degree of two, based on our study
+        model = Pipeline([("poly", PolynomialFeatures(degree=1, include_bias=True)),
+                          ("linear", LinearRegression(fit_intercept=True))])
 
         # fit the polynomial model regression
         pmodel = model.fit(self.X, self.y)
