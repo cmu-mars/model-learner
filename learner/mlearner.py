@@ -4,12 +4,11 @@ from sklearn.pipeline import Pipeline
 import numpy as np
 
 
-def sample_random(model, ndim, budget):
+def sample_random(ndim, budget):
     # take some ran dom samples
     # this should be replaced with pair wise sampling
     X = np.random.randint(2, size=(budget, ndim))
-    y = model.evaluateModelFast(X)
-    return X, y
+    return X
 
 
 def learn_with_interactions(X, y):
