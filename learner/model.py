@@ -244,16 +244,19 @@ def genModelfromCoeff(coeff, ndim):
     generatedModel = []
 
     # Adding bias term
-    generatedModel.append(Term(coeff[0]))
+    if coeff[0] != 0:
+     generatedModel.append(Term(coeff[0]))
 
     for i in range(ndim):
-        generatedModel.append(Term(coeff[i+1], [options[i]]))
+        if coeff[i+1] != 0:
+            generatedModel.append(Term(coeff[i+1], [options[i]]))
 
     # Generating interaction terms, if any
     if len(coeff) > ndim + 1:
         for i in range(ndim):
             for j in range(i+1, ndim):
-                generatedModel.append(Term(coeff[ndim + 1 + i + j], [options[i], options[j]]))
+                if coeff[ndim + 1 + i + j] != 0:
+                    generatedModel.append(Term(coeff[ndim + 1 + i + j], [options[i], options[j]]))
 
     return generatedModel
 
