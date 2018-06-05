@@ -2,6 +2,8 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 import numpy as np
+import pandas as pd
+import statsmodels.api as sm
 
 
 def sample_random(ndim, budget):
@@ -61,3 +63,46 @@ def mean_absolute_percentage_error(y_true, y_pred):
     # eps for avoiding division by zero
     return np.mean(np.abs((y_true - y_pred) / y_true + np.finfo(float).eps)) * 100
 
+
+def stepwise_feature_selection(X, y,
+                               initial_list=[],
+                               threshold_in=0.01,
+                               threshold_out=0.05,
+                               verbose=True):
+    ndim = X.shape[1]
+    features = [i for i in range(ndim)]
+    included = list(initial_list)
+
+    while True:
+        changed = False
+        # forward
+        excluded = list(set(features) - set(included))
+        new_pval = pd.Series(index=excluded)
+        for new_feature in excluded:
+            model = sm.OLS(y, sm.add_constant(pd.DataFrame(X[:, included + [new_feature]]))).fit()
+            new_pval[new_feature] = model.pvalues[1]
+        best_pval = new_pval.min()
+
+        if best_pval < threshold_in:
+            best_feature = new_pval.idxmin()
+            included.append(best_feature)
+            changed = True
+            if verbose:
+                print('Add {:30} with p-value {:.6}'.format("o" + str(best_feature), best_pval))
+
+        # backward
+        model = sm.OLS(y, sm.add_constant(pd.DataFrame(X[:, included]))).fit()
+        pvalues = model.pvalues.iloc[1:]
+        worst_pval = pvalues.max()
+
+        if worst_pval > threshold_out:
+            changed = True
+            worst_feature = pvalues.idxmax()
+            included.remove(included[worst_feature])
+            if verbose:
+                print('Drop {:30} with p-value {:.6}'.format("o" + str(worst_feature), worst_pval))
+
+        if not changed:
+            break
+
+    return included
