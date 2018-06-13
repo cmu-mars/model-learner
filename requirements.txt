@@ -4,3 +4,4 @@ sklearn
 pyDOE
 sympy
 numpy
+pandas
