@@ -27,7 +27,7 @@ class Learn:
         self.ready = ReadyDB(ready_db=ready_json)
         self.budget = self.ready.get_budget()
         self.model_name = self.ready.get_power_model()
-        self.default_conf = np.reshape(np.ones(ndim), (1, ndim))
+        self.default_conf = np.reshape(np.zeros(ndim), (1, ndim))
         self.true_power_model = None
         self.learned_power_model = None
         self.learned_model = None
