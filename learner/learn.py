@@ -95,7 +95,7 @@ class Learn:
 
         yTestSpeed = yTestSpeed + s
 
-        yDefaultPower = self.learned_model.predict(self.default_conf)
+        yDefaultPower = abs(self.learned_model.predict(self.default_conf))
         yDefaultPower_true = self.true_power_model.evaluateModelFast(self.default_conf)
         yDefaultSpeed = speed_list[2]
 
