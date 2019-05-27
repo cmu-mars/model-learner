@@ -9,33 +9,53 @@ from learner.model import genModelTermsfromString, Model, genModelfromCoeff
 from learner.ready_db import ReadyDB
 from learner.lib import *
 
+# used for DQN learning
+from learner.power_system import powerSystem
+from learner.DQN_agent import DQNAgent
+from learner.DQN_learner import DQNLearner
+
 model_path = os.path.expanduser("~/catkin_ws/src/cp1_base/power_models/")
 learned_model_path = os.path.expanduser("~/cp1/")
 config_list_file = os.path.expanduser('~/cp1/config_list.json')
 config_list_file_true = os.path.expanduser('~/cp1/config_list_true.json')
 ready_json = os.path.expanduser("~/ready")
 learned_model_name = 'learned_model'
+DQN_result_dir = os.path.expanduser("~/cp1/")
 
 ndim = 20
 test_size = 10000
 mu, sigma = 0, 0.1
 speed_list = [0.15, 0.3, 0.6]
 
+# For DQN learning #
+update_batch_size = 32 # number of samples used in memory replay in DQN learning
+exploration_bonus = 0 # used by exploration function (EF). 0 means that EF is disabled.
+opIDs={}
+numOfOptions=20
+for i in range(numOfOptions):
+    opIDs["o"+str(i)]=i
+
+
 
 class Learn:
     def __init__(self):
         self.ready = ReadyDB(ready_db=ready_json)
         self.budget = self.ready.get_budget()
+        self.left_budget = self.budget
         self.model_name = self.ready.get_power_model()
         self.default_conf = np.reshape(np.zeros(ndim), (1, ndim))
+        self.learned_model_filepath = os.path.join(learned_model_path, learned_model_name)
+        self.true_model_filepath = os.path.join(model_path, self.model_name)
+        self.config_list_file = config_list_file
         self.true_power_model = None
         self.learned_power_model = None
         self.learned_model = None
         self.learner = None
+        self.DQN_learner = None
 
     def get_true_model(self):
         try:
-            with open(os.path.join(model_path, self.model_name), 'r') as model_file:
+            with open(self.true_model_filepath, 'r') as model_file:
                 model_txt = model_file.read()
 
             power_model_terms = genModelTermsfromString(model_txt)
@@ -49,10 +69,68 @@ class Learn:
 
         # learn the model
         try:
-            self.learner = MLearner(self.budget, ndim, self.true_power_model)
+            model_learning_budget = int(0.1*self.left_budget)
+            self.left_budget -= model_learning_budget
+            self.learner = MLearner(model_learning_budget, ndim, self.true_power_model)
             self.learned_model = self.learner.discover()
         except Exception as e:
             raise Exception(e)
+
+    # Assumption: the learned power model is already dumpped
+    def initialize_DQN_learner(self):
+        learned_system = powerSystem(self.learned_model_filepath, opIDs)
+        system = powerSystem(self.true_model_filepath, opIDs)
+        
+        input_layer_size = system.numOfOptions
+        output_layer_size = system.numOfOptions
+
+        agent = DQNAgent(input_layer_size, output_layer_size, exploration_bonus, update_batch_size,
+                numOfOptionsToChangePerAction=1, numOfOptionsToChangeByGreedyPerAction=1)
+        self.DQN_learner = DQNLearner(agent, system, DQN_result_dir, isDebug=False)
+
+        # Initialize Replay Memory by using the learned system
+        self.DQN_learner.initializeReplayMemory(learned_system)
+
+
+    # Assumption: the self.DQN_learner has been intialized
+    # Have DQN agent to learn and finally dump Pareto-optimial configurations
+    def DQN_learning(self, budget, iterRatioFirstEpoch = 0.1, iterRatioLastEpoch = 0.05, numEpochs = 50):
+        if self.left_budget < budget:
+            raise Exception("[DQN Learning Error] The left budget ({0}) in learner is smaller the requested one {1}."
+                    .format(self.left_budget, budget))
+
+        yTestPower = self.DQN_learner.learning(
+                    totalIters = budget,
+                    iterRatioFirstEpoch = iterRatioFirstEpoch,
+                    iterRatioLastEpoch = iterRatioLastEpoch,
+                    numEpochs = numEpochs)
+
+        # adding noise for the speed
+        s = np.random.uniform(mu, sigma, budget)
+
+        yTestSpeed = np.zeros(budget)
+        for i in range(budget):
+            yTestSpeed[i] = speed_list[i % len(speed_list)]
+
+        yTestSpeed = yTestSpeed + s
+
+        yDefaultPower = abs(self.learned_model.predict(self.default_conf))
+        yDefaultSpeed = speed_list[2]
+
+        idx_pareto, pareto_power, pareto_speed = self.learner.get_pareto_frontier(yTestPower, yTestSpeed, maxX=False, maxY=True)
+        json_data = get_json(pareto_power, pareto_speed)
+
+        # add the default configuration
+        json_data['configurations'].append({
+            'config_id': 0,
+            'power_load': yDefaultPower[0]/3600*1000,
+            'power_load_w': yDefaultPower[0],
+            'speed': yDefaultSpeed
+        })
+        with open(config_list_file, 'w') as outfile:
+            json.dump(json_data, outfile)
+
+        self.left_budget -= budget
 
     def dump_learned_model(self):
         """dumps model in ~/cp1/"""
@@ -65,7 +143,7 @@ class Learn:
 
         print("The learned model: {0}".format(self.learned_power_model.__str__()))
 
-        with open(os.path.join(learned_model_path, learned_model_name), 'w') as model_file:
+        with open(self.learned_model_filepath, 'w') as model_file:
             model_file.write(self.learned_power_model.__str__())
 
         # configs = itertools.product(range(2), repeat=ndim)
