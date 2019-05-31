@@ -43,7 +43,7 @@ class Learn:
         self.budget = self.ready.get_budget()
         self.left_budget = self.budget
         self.model_name = self.ready.get_power_model()
-        self.default_conf = np.reshape(np.zeros(ndim), (1, ndim))
+        self.default_conf = np.reshape(np.concatenate(np.zeros(int(ndim/2)), np.ones(ndim-int(ndim/2))), (1, ndim))
         self.learned_model_filepath = os.path.join(learned_model_path, learned_model_name)
         self.true_model_filepath = os.path.join(model_path, self.model_name)
         self.config_list_file = config_list_file
