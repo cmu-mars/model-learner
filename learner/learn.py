@@ -202,4 +202,22 @@ class Learn:
         with open(config_list_file_true, 'w') as outfile:
             json.dump(json_data_true_model, outfile)
 
+    def dump_true_default_config(self):
+        '''
+            Write the default config based on the true model for case A and case B.
+            Write into config_list_true.json
+        '''
+
+        yDefaultPower_true = self.true_power_model.evaluateModelFast(self.default_conf)
+        yDefaultSpeed = speed_list[2]
+        json_data_true_model['configurations'] = []
+        json_data_true_model['configurations'].append({
+            'config_id': 0,
+            'power_load': yDefaultPower_true[0]/3600*1000,
+            'power_load_w': yDefaultPower_true[0],
+            'speed': yDefaultSpeed
+        })
+        with open(config_list_file_true, 'w') as outfile:
+            json.dump(json_data_true_model, outfile)
+
 
