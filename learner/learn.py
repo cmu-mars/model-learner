@@ -210,6 +210,7 @@ class Learn:
 
         yDefaultPower_true = self.true_power_model.evaluateModelFast(self.default_conf)
         yDefaultSpeed = speed_list[2]
+        json_data_true_model = {}
         json_data_true_model['configurations'] = []
         json_data_true_model['configurations'].append({
             'config_id': 0,
