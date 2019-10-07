@@ -10,6 +10,8 @@ from learner.ready_db import ReadyDB
 from learner.lib import *
 from learner.constants import AdaptationLevel
 
+from learner.tranlearner import TranLearner
+
 # used for DQN learning
 from learner.power_system import powerSystem
 from learner.DQN_agent import DQNAgent
