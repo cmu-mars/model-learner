@@ -47,6 +47,7 @@ class Learn:
     def __init__(self):
         self.ready = ReadyDB(ready_db=ready_json)
         self.budget = self.ready.get_budget()
+        self.used_budget = 0
         self.model_name = self.ready.get_power_model()
         default_conf = np.concatenate((np.zeros(int(ndim/2)), np.ones(ndim-int(ndim/2))))
         self.default_conf = np.reshape(default_conf, (1, ndim))
@@ -82,14 +83,17 @@ class Learn:
             if self.ready.get_baseline() == AdaptationLevel.BASELINE_C:
                 self.learner = MLearner(self.budget, ndim, self.true_power_model)
                 self.learned_model = self.learner.discover()
+                self.used_budget = self.budget
             elif self.ready.get_baseline() == AdaptationLevel.BASELINE_D:
                 offline_func    = None # TODO: use the true power model
                 online_func     = None # TODO: use the true power model
                 cost_ratio      = 0.25 # offline function / online function
                 self.learner = TranLearner(self.budget, offline_func, online_func, cost_ratio)
                 self.learned_model = self.learner.offline_learning()
-                with open(used_budget_report_path, "w") as fp:
-                    fp.write(str(self.learner.used_budget))
+                self.used_budget = self.learner.used_budget
+
+            with open(used_budget_report_path, "w") as fp:
+                fp.write(str(self.used_budget))
         except Exception as e:
             raise Exception(e)
 
@@ -97,8 +101,9 @@ class Learn:
     def start_online_learning(self):
         try:
             self.learned_model = self.learner.online_learning()
+            self.used_budget = self.learner.used_budget
             with open(used_budget_report_path, "w") as fp:
-                fp.write(self.learner.used_budget)
+                fp.write(self.used_budget)
         except Exception as e:
             raise Exception(e)
 
@@ -261,4 +266,5 @@ class Learn:
         with open(self.config_list_file_true, 'w') as outfile:
             json.dump(json_data_true_model, outfile)
 
-
+    def has_budget(self):
+        return self.budget > self.used_budget
