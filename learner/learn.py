@@ -24,7 +24,7 @@ config_list_file_true = os.path.expanduser('~/cp1/config_list_true.json')
 ready_json = os.path.expanduser("~/ready")
 learned_model_name = 'learned_model'
 DQN_result_dir = os.path.expanduser("~/cp1/")
-used_budget_report_path = os.path.expanduser("~/cp1/")
+used_budget_report_path = os.path.expanduser("~/cp1/used_budget")
 
 ndim = 20
 test_size = 10000
@@ -89,7 +89,7 @@ class Learn:
                 self.learner = TranLearner(self.budget, offline_func, online_func, cost_ratio)
                 self.learned_model = self.learner.offline_learning()
                 with open(used_budget_report_path, "w") as fp:
-                    fp.write(self.learner.used_budget)
+                    fp.write(str(self.learner.used_budget))
         except Exception as e:
             raise Exception(e)
 
