@@ -8,6 +8,7 @@ from learner.mlearner import MLearner
 from learner.model import genModelTermsfromString, Model, genModelfromCoeff
 from learner.ready_db import ReadyDB
 from learner.lib import *
+from learner.constants import AdaptationLevel
 
 # used for DQN learning
 from learner.power_system import powerSystem
