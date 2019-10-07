@@ -103,7 +103,7 @@ class Learn:
             self.learned_model = self.learner.online_learning()
             self.used_budget = self.learner.used_budget
             with open(used_budget_report_path, "w") as fp:
-                fp.write(self.used_budget)
+                fp.write(str(self.used_budget))
         except Exception as e:
             raise Exception(e)
 
