@@ -26,7 +26,7 @@ class TranLearner:
         # Map the actual budget that can be used in the offline learning
         # Because the units between offline learning and online learning are different
         # Offline learning cost is consider cheaper than the online learning cost.
-        budget = int(self.offline_budget / cost_ratio)
+        budget = int(self.offline_budget / self.cost_ratio)
 
         # ToDo: offline learning process
         #       Update self.suggorate_model
