@@ -2,7 +2,7 @@ import GPy
 import GPyOpt
 import numpy as np
 
-from  maxUncerntainty import AcquisitionMU
+from learner.maxUncertainty import AcquisitionMU
 
 
 class TranLearner:
