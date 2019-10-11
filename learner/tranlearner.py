@@ -149,7 +149,7 @@ class TranLearner:
         model_update_interval = 1
         budget = 0
         if self.offline_budget < 2:
-            raise ValueError(f"The offline budget ({self.offline_budget}) < 2.")
+            raise ValueError("The offline budget ({}) < 2.".format(self.offline_budget))
         elif self.offline_budget <= 10:
             num_init = 2
         else:
@@ -159,8 +159,8 @@ class TranLearner:
                 model_update_interval = interval
         budget = self.offline_budget - num_init
 
-        print(f"Offline learning budget: {self.offline_budget}")
-        print(f"----Run Bayesian Optimization with {num_init} initial points and {budget} iterations")
+        print("Offline learning budget: {}".format(self.offline_budget))
+        print("----Run Bayesian Optimization with {} initial points and {} iterations".format(num_init, budget))
 
         X_init = self.uniSampleDomain(self.domain, num_init)
         Y_init = self.measurePM(X_init)
@@ -181,7 +181,7 @@ class TranLearner:
             budget  = self.online_budget
         model_update_interval = budget
 
-        print(f"online learning started with the budget: {budget}")
+        print("Online learning started with the budget: {}".format(budget))
 
         self.bo = self.create_bo(
                 model_update_interval,
