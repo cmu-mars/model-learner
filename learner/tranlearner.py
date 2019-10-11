@@ -154,9 +154,10 @@ class TranLearner:
             num_init = 2
         else:
             num_init = 10
-            interval = (self.offline_budget - 10) // 10
-            if interval > 1:
-                model_update_interval = interval
+            num_iters = 10
+            model_update_interval = (self.offline_budget - num_init) // num_iters 
+            if model_update_interval < 1:
+                model_update_interval = 1
         budget = self.offline_budget - num_init
 
         print("Offline learning budget: {}".format(self.offline_budget))
@@ -166,7 +167,15 @@ class TranLearner:
         Y_init = self.measurePM(X_init)
 
         self.bo = self.create_bo(model_update_interval, X_init, Y_init)
-        self.bo.run_optimization(budget)
+        self.bo.run_optimization(moel_update_interval*num_iters)
+        
+        # Consume left budget
+        left_budget = budget - moel_update_interval*num_iters
+        if left_budget > 0:
+            model_update_interval = left_budget
+            self.bo = self.create_bo(model_update_interval, self.bo.X, self.bo.Y)
+            self.bo.run_optimization(left_budget)
+     
         self.suggorate_model = self.bo.model
 
         # Update budget information
