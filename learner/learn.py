@@ -85,10 +85,7 @@ class Learn:
                 self.learned_model = self.learner.discover()
                 self.used_budget = self.budget
             elif self.ready.get_baseline() == AdaptationLevel.BASELINE_D:
-                offline_func    = None # TODO: use the true power model
-                online_func     = None # TODO: use the true power model
-                cost_ratio      = 0.25 # offline function / online function
-                self.learner = TranLearner(self.budget, offline_func, online_func, cost_ratio)
+                self.learner = TranLearner(self.budget, ndim, self.true_model_filepath)
                 self.learned_model = self.learner.offline_learning()
                 self.used_budget = self.learner.used_budget
 
