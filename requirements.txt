@@ -5,3 +5,6 @@ pyDOE
 sympy
 scipy
 numpy
+GPy
+GPyOpt
+matplotlib
