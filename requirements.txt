@@ -7,4 +7,3 @@ scipy
 numpy
 GPy
 GPyOpt
-matplotlib
