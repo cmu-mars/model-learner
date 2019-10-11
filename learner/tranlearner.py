@@ -167,10 +167,10 @@ class TranLearner:
         Y_init = self.measurePM(X_init)
 
         self.bo = self.create_bo(model_update_interval, X_init, Y_init)
-        self.bo.run_optimization(moel_update_interval*num_iters)
+        self.bo.run_optimization(model_update_interval*num_iters)
         
         # Consume left budget
-        left_budget = budget - moel_update_interval*num_iters
+        left_budget = budget - model_update_interval*num_iters
         if left_budget > 0:
             model_update_interval = left_budget
             self.bo = self.create_bo(model_update_interval, self.bo.X, self.bo.Y)

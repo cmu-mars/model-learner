@@ -127,11 +127,13 @@ class Learn:
                 break
 
         # to avoid negative power load
-        if self.ready.get_baseline() == AdaptationLevel.BASELINE_C:
+        if self.ready.get_baseline() == AdaptationLevel.BASELINE_C: 
             yTestPower = abs(self.learned_model.predict(xTest))
-        elif self.ready.get_baseline() == AdaptationLevel.BASELINE_D:
-            # TODO:Use true_power_model for testing the interaction code between learner and TA
-            yTestPower = abs(self.true_power_model.evaluateModelFast(xTest))
+        if self.ready.get_baseline() == AdaptationLevel.BASELINE_D:
+            predY, _ = self.learned_model.predict(xTest, with_noise=False)
+            predY = np.ravel(predY)
+            yTestPower = abs(predY)
+
 
         yTestPower_true = self.true_power_model.evaluateModelFast(xTest)
 
@@ -147,8 +149,11 @@ class Learn:
         if self.ready.get_baseline() == AdaptationLevel.BASELINE_C:
             yDefaultPower = abs(self.learned_model.predict(self.default_conf))
         elif self.ready.get_baseline() == AdaptationLevel.BASELINE_D:
-            # TODO:Use true_power_model for testing the interaction code between learner and TA
-            yDefaultPower = abs(self.true_power_model.evaluateModelFast(self.default_conf))
+            defaultPredY, _ = self.learned_model.predict(self.default_conf, with_noise=False)
+            defaultPredY = np.ravel(defaultPredY)
+            yDefaultPower = abs(defaultPredY)
+
+
 
         yDefaultPower_true = self.true_power_model.evaluateModelFast(self.default_conf)
         yDefaultSpeed = speed_list[2]
