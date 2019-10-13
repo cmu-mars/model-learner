@@ -172,6 +172,8 @@ class Learn:
         })
         with open(self.config_list_file, 'w') as outfile:
             json.dump(json_data, outfile)
+            print(\n"**Predicted**")
+            print(json.dumps(json_data, indent=4))
 
         json_data_true_model['configurations'].append({
             'config_id': 0,
@@ -181,6 +183,10 @@ class Learn:
         })
         with open(config_list_file_true, 'w') as outfile:
             json.dump(json_data_true_model, outfile)
+            print(\n"**True**")
+            print(json.dumps(json_data_true_model, indent=4))
+
+
 
     def dump_true_default_config(self):
         '''
