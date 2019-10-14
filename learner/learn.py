@@ -74,7 +74,7 @@ class Learn:
                 self.learned_model = self.learner.discover()
                 self.used_budget = self.budget
             elif self.ready.get_baseline() == AdaptationLevel.BASELINE_D:
-                self.learner = TranLearner(self.budget, ndim, self.true_model_filepath)
+                self.learner = TranLearner(self.budget, ndim, self.true_power_model)
                 self.learned_model = self.learner.offline_learning()
                 self.used_budget = self.learner.used_budget
 
@@ -119,6 +119,8 @@ class Learn:
         #     xTest[i, :] = np.array(c)
         #     i += 1
 
+        test_size = 10000
+
         xTest = np.random.randint(2, size=(test_size, ndim))
 
         for i in range(test_size):
@@ -130,11 +132,21 @@ class Learn:
         if self.ready.get_baseline() == AdaptationLevel.BASELINE_C: 
             yTestPower = abs(self.learned_model.predict(xTest))
         if self.ready.get_baseline() == AdaptationLevel.BASELINE_D:
-            predY, _ = self.learned_model.predict(xTest, with_noise=False)
+            predY, predYStd = self.learned_model.predict(xTest, with_noise=False)
             predY = np.ravel(predY)
-            yTestPower = abs(predY)
+            predYStd = np.ravel(predYStd)
 
+            halfIntervals = 1.729*predYStd
+            goodIndices = np.where(predY>halfIntervals)
 
+            xTest       = xTest[goodIndices]
+            test_size   = xTest.shape[0]
+            
+            predY       = predY[goodIndices]
+            predYStd    = predYStd[goodIndices]
+            yTestPower  = predY
+ 
+        
         yTestPower_true = self.true_power_model.evaluateModelFast(xTest)
 
         # adding noise for the speed
@@ -149,16 +161,15 @@ class Learn:
         if self.ready.get_baseline() == AdaptationLevel.BASELINE_C:
             yDefaultPower = abs(self.learned_model.predict(self.default_conf))
         elif self.ready.get_baseline() == AdaptationLevel.BASELINE_D:
-            defaultPredY, _ = self.learned_model.predict(self.default_conf, with_noise=False)
-            defaultPredY = np.ravel(defaultPredY)
-            yDefaultPower = abs(defaultPredY)
-
-
+            defaultPredY, defaultPredYVar = self.learned_model.predict(self.default_conf, with_noise=False)
+            yDefaultPower = defaultPredY
+            yDefaultPower = abs(np.ravel(yDefaultPower))
 
         yDefaultPower_true = self.true_power_model.evaluateModelFast(self.default_conf)
         yDefaultSpeed = speed_list[2]
 
         idx_pareto, pareto_power, pareto_speed = self.learner.get_pareto_frontier(yTestPower, yTestSpeed, maxX=False, maxY=True)
+
         json_data = get_json(pareto_power, pareto_speed)
 
         json_data_true_model = get_json([yTestPower_true[i] for i in idx_pareto], [yTestSpeed[i] for i in idx_pareto])
@@ -172,8 +183,8 @@ class Learn:
         })
         with open(self.config_list_file, 'w') as outfile:
             json.dump(json_data, outfile)
-            print(\n"**Predicted**")
-            print(json.dumps(json_data, indent=4))
+            print("\n**Predicted**")
+            print(json_data)
 
         json_data_true_model['configurations'].append({
             'config_id': 0,
@@ -183,8 +194,8 @@ class Learn:
         })
         with open(config_list_file_true, 'w') as outfile:
             json.dump(json_data_true_model, outfile)
-            print(\n"**True**")
-            print(json.dumps(json_data_true_model, indent=4))
+            print("\n**True**")
+            print(json_data_true_model)
 
 
 
