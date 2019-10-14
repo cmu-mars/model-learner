@@ -2,7 +2,7 @@ import GPy
 import GPyOpt
 import numpy as np
 import math
-
+import re
 import time
 
 from learner.maxUncertainty import AcquisitionMU
@@ -10,7 +10,7 @@ from learner.maxUncertainty import AcquisitionMU
 
 class TranLearner:
 
-    def __init__(self, budget, num_dims, power_model_filepath):
+    def __init__(self, budget, num_dims, true_power_model):
 
         self.offline_budget_ratio = 0.5
         self.offline_budget = int(budget * self.offline_budget_ratio)
@@ -26,7 +26,7 @@ class TranLearner:
             self.opIDs['o'+str(i)]=i
 
 
-        self.powerModel = self.loadPowerModel(power_model_filepath)
+        self.true_power_model = true_power_model 
         self.domain = self.createDomain(self.num_dims, "discrete"  , (0, 1))
 
         self.bo = None
@@ -89,7 +89,7 @@ class TranLearner:
     #   config: 2D numpy array where each row is an array of 20 elements, which represets a point
     # output:
     #   the performance of the power model
-    def measurePM(self, configs):
+    def measurePM0(self, configs):
         num_points = configs.shape[0]
         perfs = np.zeros((num_points, 1))
 
@@ -106,12 +106,24 @@ class TranLearner:
             perfs[p_idx][0] = perf
         return perfs
 
+    def measurePM(self, configs):
+        X = configs
+
+        if X.ndim == 1:
+            X = np.reshape(X, (1, len(X)))
+
+        Y = self.true_power_model.evaluateModelFast(X)
+        Y = np.reshape(Y, (len(Y), 1))
+
+        return Y
+
+
+
     def create_bo(self, model_update_interval, X_init, Y_init):
         # Initialize Bayesian optimization
 
-
         # --- feasible region
-        space = GPyOpt.Design_space(self.domain)
+        space = GPyOpt.Design_space(space=self.domain)
 
         # --- CHOOSE the objective
         objective = GPyOpt.core.task.SingleObjective(self.measurePM)
@@ -143,44 +155,41 @@ class TranLearner:
         return bo
 
     def offline_learning(self):
-
-        # Map the actual budget that can be used in the offline learning
-        # Because the units between offline learning and online learning are different
-        # Offline learning cost is consider cheaper than the online learning cost.
        
         num_init = int(self.offline_budget*0.2)
  
-        if num_init > 40:
-            num_init = 40
+        if num_init > 50:
+            num_init = 50
         budget = self.offline_budget - num_init
 
-        num_iters = 20
-        interval = budget // num_iters
+        if self.offline_budget <= 100:
+            model_update_interval = 1
+        elif (self.offline_budget > 100) and (self.offline_budget <= 200):
+            model_update_interval = 2
+        else:
+            model_update_interval = 5
 
-        if interval < 1:
-            interval = 1
+        num_iters = budget // model_update_interval
 
         print("Offline learning budget: {}".format(self.offline_budget))
         print("--- Already used budget: {}".format(self.used_budget))
-        print("--- Run Bayesian Optimization with {} initial points and {} iterations".format(num_init, math.ceil(budget//interval)))
+        print("--- Run Bayesian Optimization with {} initial points and {} iterations".format(num_init, math.ceil(budget/model_update_interval)))
 
         start_time = time.time()
 
         X_init = self.uniSampleDomain(self.domain, num_init)
         Y_init = self.measurePM(X_init)
 
-        model_update_interval = interval
-
         self.bo = self.create_bo(model_update_interval, X_init, Y_init)
-        self.bo.run_optimization(model_update_interval*num_iters)
-        
+        self.bo.run_optimization(budget)
+
         # Consume left budget if any
         left_budget = budget - model_update_interval*num_iters
         if left_budget > 0:
             model_update_interval = left_budget
             self.bo = self.create_bo(model_update_interval, self.bo.X, self.bo.Y)
             self.bo.run_optimization(left_budget)
-    
+
         print("--- Offline learning is done. Consume {} seconds ---".format(time.time() - start_time)) 
 
         self.suggorate_model = self.bo.model
@@ -196,15 +205,20 @@ class TranLearner:
         if self.online_budget < budget:
             budget  = self.online_budget
 
-        num_iters = 5
-        interval = budget // num_iters
-
-        if interval < 1:
+        if self.used_budget < 150:
             interval = 1
+        elif (self.used_budget >= 150) and (self.used_budget < 250):
+            interval = 2
+        elif (self.used_budget >= 250) and (self.used_budget < 350):
+            interval = 5
+        elif (self.used_budget >= 350) and (self.used_budget < 450):
+            interval = 10
+        else:
+            interval = 25
 
         model_update_interval = interval
 
-        print("Online learning started with the budget {} and {} iterations".format(budget, math.ceil(budget//interval)))
+        print("Online learning started with the budget {} and {} iterations".format(budget, math.ceil(budget/interval)))
         print("--- Already used budget: {}".format(self.used_budget))
 
         start_time = time.time()
@@ -216,6 +230,7 @@ class TranLearner:
         self.bo.run_optimization(budget)
 
         # Consume left budget if any
+        num_iters = budget // model_update_interval
         left_budget = budget - model_update_interval*num_iters
         if left_budget > 0:
             model_update_interval = left_budget
