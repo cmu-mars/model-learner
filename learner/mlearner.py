@@ -11,7 +11,7 @@ class MLearner:
         self.degree = ndim
         self.model = power_model
 
-    def discover(self):
+    def discover(self, observation_noise_level=0):
         # performance models has interaction degree of two, based on our study
         model = Pipeline([("poly", PolynomialFeatures(degree=2, interaction_only=True, include_bias=True)),
                                ("linear", LinearRegression(fit_intercept=True))])
@@ -20,6 +20,12 @@ class MLearner:
         # this should be replaced with pair wise sampling
         X = np.random.randint(2, size=(self.budget, self.degree))
         y = self.model.evaluateModelFast(X)
+        if observation_noise_level != 0:
+            #print("Noise observation: N(0, {})".format(observation_noise_level))
+            y = y + np.random.normal(
+                    loc=0.0,
+                    scale=observation_noise_level,
+                    size=self.budget)
 
         # fit the polynomial model regression
         pmodel = model.fit(X, y)
