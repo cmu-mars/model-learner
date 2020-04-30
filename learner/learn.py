@@ -65,13 +65,13 @@ class Learn:
             raise Exception(e)
 
     # For case c and case d (offline learning)
-    def start_learning(self):
+    def start_learning(self, observation_noise_level=0):
 
         # learn the model
         try:
             if self.ready.get_baseline() == AdaptationLevel.BASELINE_C:
                 self.learner = MLearner(self.budget, ndim, self.true_power_model)
-                self.learned_model = self.learner.discover()
+                self.learned_model = self.learner.discover(observation_noise_level=observation_noise_level)
                 self.used_budget = self.budget
             elif self.ready.get_baseline() == AdaptationLevel.BASELINE_D:
                 self.learner = TranLearner(self.budget, ndim, self.true_power_model)
